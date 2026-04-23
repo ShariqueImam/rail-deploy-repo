@@ -1,10 +1,13 @@
 const loadBtn = document.getElementById("load-btn");
 const statusEl = document.getElementById("status");
 const resultsEl = document.getElementById("results");
+const isLocalDevHost =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
 const apiBaseUrl =
-  window.location.port === "3000"
-    ? ""
-    : `${window.location.protocol}//${window.location.hostname}:3000`;
+  isLocalDevHost && window.location.port !== "3000"
+    ? `${window.location.protocol}//${window.location.hostname}:3000`
+    : "";
 
 function createTable(headers, rows, emptyLabel) {
   const wrapper = document.createElement("div");
