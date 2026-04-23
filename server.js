@@ -7,18 +7,16 @@ const app = express();
 const {
   PORT,
   MONGODB_URI,
-  CLIENT_ORIGIN,
   COLLECTION_ONE,
   COLLECTION_TWO,
 } = process.env;
 
 const port = Number(PORT) || 3000;
 const mongoUri = MONGODB_URI;
-const clientOrigin = CLIENT_ORIGIN || "http://127.0.0.1:5501";
-const localhostOriginRegex = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 const corsHeaders = {
-  "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Methods": "GET,OPTIONS",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
 };
 
 if (!mongoUri) {
@@ -54,26 +52,6 @@ async function resolveCollections(db) {
   return names;
 }
 
-function isAllowedOrigin(origin) {
-  if (!origin) return false;
-  return (
-    origin === clientOrigin ||
-    origin === "null" ||
-    localhostOriginRegex.test(origin)
-  );
-}
-
-function applyCorsHeaders(res, requestOrigin) {
-  res.header(
-    "Access-Control-Allow-Origin",
-    requestOrigin === "null" ? "null" : requestOrigin
-  );
-  res.header("Vary", "Origin");
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.header(key, value);
-  });
-}
-
 function mapUser(doc) {
   return { username: doc.username ?? "N/A" };
 }
@@ -94,11 +72,9 @@ function mapAccount(doc) {
 
 app.use(express.static(path.join(__dirname, "public")));
 app.use((req, res, next) => {
-  const requestOrigin = req.headers.origin;
-
-  if (isAllowedOrigin(requestOrigin)) {
-    applyCorsHeaders(res, requestOrigin);
-  }
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.header(key, value);
+  });
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
